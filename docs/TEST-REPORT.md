@@ -41,3 +41,9 @@ Windows، PHP 8.4.27، MariaDB 11.4.13، PDO MySQL وmbstring، ومتصفح Cod
 ## ما لم يتم التحقق منه
 
 فتح CSV في تطبيق Excel نفسه، وApache/XAMPP على جهاز آخر، وMySQL بدل MariaDB، وفشل الشبكة من المتصفح، واستعادة نسخة احتياطية، والنشر على استضافة خارجية. يدعم التطبيق إظهار فشل الطلبات، لكن لا تُعد هذه الحالات مجرّبة ما لم تُختبر فعليًا.
+
+## Fresh checkout and GitHub Actions
+
+The 58 integration checks also passed from a clean source copy with a newly initialized MariaDB 11.4.13 database. The documented preparation helper generated all test configuration and credentials.
+
+GitHub Actions passed PHP/JavaScript syntax checks, disposable MariaDB 11.4 database preparation and integration tests on Ubuntu 24.04: https://github.com/dhooomyx77-web/TransactionFlow/actions/runs/43347931515
