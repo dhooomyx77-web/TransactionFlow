@@ -1,0 +1,45 @@
+name: Application checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+        ports:
+          - 3317:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PHP extensions
+        run: sudo apt-get update && sudo apt-get install -y php-cli php-mysql php-mbstring
+      - name: Check syntax
+        run: |
+          find app public scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l
+          php -l config.example.php
+          node --check public/script.js
+          python3 -m py_compile tests/integration.py
+      - name: Prepare disposable databases
+        env:
+          TRANSACTIONFLOW_DB_ACCOUNT_HOST: '%'
+        run: php tests/prepare-local.php --prepare
+      - name: Run integration tests
+        run: |
+          TRANSACTIONFLOW_CONFIG="$PWD/var/test-config.php" php -S 127.0.0.1:8091 -t public >var/server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8091/api.php?action=session > /dev/null; then break; fi
+            sleep 1
+          done
+          python3 tests/integration.py
